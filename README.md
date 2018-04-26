@@ -5,5 +5,5 @@
 >
 -Zubin Kapadia
 -Dhruti Desai
--Supriya Iyer
+-Supriya Iyer([@siyer12](https://github.com/siyer12) | siyer12 | siyer12@asu.edu])
 -Chirag Bumb
