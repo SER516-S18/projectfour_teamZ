@@ -1,6 +1,7 @@
 package teamZ.project4.ui.client;
 
 import teamZ.project4.constants.TextConstants;
+import teamZ.project4.controllers.ClientController;
 import teamZ.project4.model.client.ClientModel;
 
 import javax.swing.*;
@@ -14,6 +15,7 @@ import java.awt.event.KeyEvent;
 public class ClientView extends JFrame {
     public static final Dimension WINDOW_SIZE = new Dimension(1024, 768);
     private static ClientView instance;
+    private ClientController clientController;
 
     /**
      * Getter for singleton ClientView
@@ -38,9 +40,10 @@ public class ClientView extends JFrame {
      * Representing the UI for the client application
      */
     private ClientView() {
-        // Start the client model if it isn't running
-        if(!ClientModel.get().isRunning())
-            ClientModel.get().start();
+
+        clientController = new ClientController();
+
+        clientController.initClientModel();
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
             // If CONTROL + SHIFT + Q, open server
