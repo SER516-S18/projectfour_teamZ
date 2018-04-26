@@ -1,0 +1,18 @@
+# Compiled class file
+*.class
+.DS_Store
+out/*
+.idea/*
+*.iml
+*.jar
+*.ipr
+*.iws
+!/team04-projectthree.jar
+*.zip
+*MANIFEST.MF
+/target/*
+.settings/org.eclipse.jdt.core.prefs
+.classpath
+.project
+/target/
+/doc/*
