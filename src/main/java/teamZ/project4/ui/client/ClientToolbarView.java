@@ -5,6 +5,9 @@ import teamZ.project4.constants.TextConstants;
 import teamZ.project4.controllers.client.ClientToolbarController;
 import teamZ.project4.listeners.ClientListener;
 import teamZ.project4.model.client.ClientModel;
+import teamZ.project4.model.server.ServerModel;
+import teamZ.project4.ui.server.ServerView;
+import teamZ.project4.util.Log;
 
 import javax.swing.*;
 import java.awt.*;
@@ -31,7 +34,7 @@ public class ClientToolbarView extends JMenuBar {
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
             // If CONTROL + SHIFT + Q, open server
             if (e.isShiftDown() && e.getKeyCode() == 81 && e.getID() == KeyEvent.KEY_RELEASED) {
-                controller.openServerPanel();
+                openServerPanel();
                 return true;
             }
             return false;
@@ -80,7 +83,7 @@ public class ClientToolbarView extends JMenuBar {
 
         menuItem = new JMenuItem("Open composer (server)");
         menuItem.addActionListener(e -> {
-            controller.openServerPanel();
+            openServerPanel();
         });
         menu.add(menuItem);
 
@@ -121,5 +124,43 @@ public class ClientToolbarView extends JMenuBar {
         textTime.setForeground(Color.BLACK);
         textTime.setFont(TextConstants.LARGE_FONT);
         this.add(textTime);
+    }
+
+    /**
+     * Opens the server composer UI, if not open, otherwise refocuses it. Attempts connection if starting up server.
+     */
+    public void openServerPanel() {
+        if(ServerView.getInstance().isDisplayable()) {
+            ServerView.getInstance().toFront();
+            ServerView.getInstance().repaint();
+        } else {
+            ServerView.getInstance().init();
+            int x = ClientView.getInstance().getX() - (ClientView.getInstance().getWidth() / 2) - (ServerView.getInstance().getWidth() / 2);
+            if (x < ServerView.getInstance().getWidth() / 2) {
+                x = ClientView.getInstance().getX() + (ClientView.getInstance().getWidth() / 2) + (ServerView.getInstance().getWidth() / 2);
+            }
+            if(x > Toolkit.getDefaultToolkit().getScreenSize().width - ServerView.getInstance().getWidth() / 2) {
+                x = ClientView.getInstance().getX();
+            }
+
+            ServerView.getInstance().setLocation(
+                    x, ClientView.getInstance().getLocation().getLocation().y
+            );
+        }
+
+        // Try to connect the client in a moment
+        new Thread(() -> {
+            try {
+                long timeout = System.currentTimeMillis() + 2000L;
+                while(System.currentTimeMillis() < timeout && !ServerModel.get().isRunning()) {
+                    Thread.sleep(100L);
+                }
+            } catch(InterruptedException e) {
+                Log.w("Failed to wait while server starts up (" + e.getMessage() + ")", ClientToolbarView.class);
+            }
+
+            if(!ClientModel.get().isRunning())
+                ClientModel.get().start();
+        }).start();
     }
 }

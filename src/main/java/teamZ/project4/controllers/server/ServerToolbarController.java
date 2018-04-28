@@ -2,7 +2,6 @@ package teamZ.project4.controllers.server;
 
 import teamZ.project4.controllers.server.interfaces.ServerToolbarInterface;
 import teamZ.project4.model.server.ServerModel;
-import teamZ.project4.ui.server.ServerToolbarView;
 import teamZ.project4.util.Log;
 
 import javax.swing.*;
@@ -31,11 +30,11 @@ public class ServerToolbarController implements ServerToolbarInterface {
                 ServerModel.get().start();
             }
         } catch(NumberFormatException e) {
-            Log.e("Invalid port specified (Must be numeric)", ServerToolbarView.class);
+            Log.e("Invalid port specified (Must be numeric)", this.getClass());
         } catch(IllegalArgumentException e) {
-            Log.e("Invalid port specified (" + e.getMessage() + ")", ServerToolbarView.class);
+            Log.e("Invalid port specified (" + e.getMessage() + ")", this.getClass());
         } catch (InterruptedException e) {
-            Log.w("Failed to sleep between restarting server from port change (" + e.getMessage() + ")", ServerToolbarView.class);
+            Log.w("Failed to sleep between restarting server from port change (" + e.getMessage() + ")", this.getClass());
         }
     }
 
@@ -49,7 +48,7 @@ public class ServerToolbarController implements ServerToolbarInterface {
                     Thread.sleep(100L);
                 }
             } catch(InterruptedException e) {
-                Log.w("Failed to sleep while shutting down server (" + e.getMessage() + ")", ServerToolbarView.class);
+                Log.w("Failed to sleep while shutting down server (" + e.getMessage() + ")", this.getClass());
             }
         } else {
             ServerModel.get().start();
@@ -59,7 +58,7 @@ public class ServerToolbarController implements ServerToolbarInterface {
                     Thread.sleep(100L);
                 }
             } catch(InterruptedException e) {
-                Log.w("Failed to sleep while starting server (" + e.getMessage() + ")", ServerToolbarView.class);
+                Log.w("Failed to sleep while starting server (" + e.getMessage() + ")", this.getClass());
             }
         }
     }

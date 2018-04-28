@@ -10,9 +10,4 @@ public interface ClientToolbarInterface {
      * Prompts the user to input a new host/port input
      */
     void displayChangeHostDialog();
-
-    /**
-     * Opens the server composer UI, if not open, otherwise refocuses it. Attempts connection if starting up server.
-     */
-    void openServerPanel();
 }

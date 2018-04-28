@@ -4,7 +4,6 @@ import teamZ.project4.controllers.server.interfaces.ServerValuesInterface;
 import teamZ.project4.model.EmostatePacketBuilder;
 import teamZ.project4.model.Emotion;
 import teamZ.project4.model.Expression;
-import teamZ.project4.ui.server.ServerValuesView;
 import teamZ.project4.util.Log;
 
 import javax.swing.*;
@@ -58,7 +57,7 @@ public class ServerValuesController implements ServerValuesInterface {
             spinner.commitEdit();
             emostatePacketBuilder.setExpression((Expression) combo.getSelectedItem(), (float) ((double) spinner.getValue()));
         } catch(ParseException e) {
-            Log.w("Failed to parse " + combo.getSelectedItem() + " value", ServerValuesView.class);
+            Log.w("Failed to parse " + combo.getSelectedItem() + " value", this.getClass());
         }
     }
 
@@ -74,7 +73,7 @@ public class ServerValuesController implements ServerValuesInterface {
             spinner.commitEdit();
             emostatePacketBuilder.setEmotion((Emotion) combo.getSelectedItem(), (float) ((double) spinner.getValue()));
         } catch(ParseException e) {
-            Log.w("Failed to parse " + combo.getSelectedItem() + " value", ServerValuesView.class);
+            Log.w("Failed to parse " + combo.getSelectedItem() + " value", this.getClass());
         }
     }
 }

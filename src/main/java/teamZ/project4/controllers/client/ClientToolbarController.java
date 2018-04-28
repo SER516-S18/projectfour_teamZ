@@ -2,10 +2,6 @@ package teamZ.project4.controllers.client;
 
 import teamZ.project4.controllers.client.interfaces.ClientToolbarInterface;
 import teamZ.project4.model.client.ClientModel;
-import teamZ.project4.model.server.ServerModel;
-import teamZ.project4.ui.client.ClientToolbarView;
-import teamZ.project4.ui.client.ClientView;
-import teamZ.project4.ui.server.ServerView;
 import teamZ.project4.util.Log;
 
 import javax.swing.*;
@@ -31,7 +27,7 @@ public class ClientToolbarController implements ClientToolbarInterface {
                     Thread.sleep(100L);
                 }
             } catch(InterruptedException e) {
-                Log.w("Failed to sleep while disconnecting (" + e.getMessage() + ")", ClientToolbarView.class);
+                Log.w("Failed to sleep while disconnecting (" + e.getMessage() + ")", this.getClass());
             }
         } else {
             ClientModel.get().start();
@@ -41,7 +37,7 @@ public class ClientToolbarController implements ClientToolbarInterface {
                     Thread.sleep(100L);
                 }
             } catch(InterruptedException e) {
-                Log.w("Failed to sleep while connecting (" + e.getMessage() + ")", ClientToolbarView.class);
+                Log.w("Failed to sleep while connecting (" + e.getMessage() + ")", this.getClass());
             }
         }
     }
@@ -71,47 +67,12 @@ public class ClientToolbarController implements ClientToolbarInterface {
                 ClientModel.get().setPort(port);
             }
         } catch(NumberFormatException e) {
-            Log.e("Invalid port specified (Must be numeric)", ClientToolbarView.class);
+            Log.e("Invalid port specified (Must be numeric)", this.getClass());
         } catch(UnknownHostException e) {
-            Log.e("Invalid host specified (" + e.getMessage() + ")", ClientToolbarView.class);
+            Log.e("Invalid host specified (" + e.getMessage() + ")", this.getClass());
         } catch(IllegalArgumentException e) {
-            Log.e("Invalid port specified (" + e.getMessage() + ")", ClientToolbarView.class);
+            Log.e("Invalid port specified (" + e.getMessage() + ")", this.getClass());
         }
     }
 
-    @Override
-    public void openServerPanel() {
-        if(ServerView.getInstance().isDisplayable()) {
-            ServerView.getInstance().toFront();
-            ServerView.getInstance().repaint();
-        } else {
-            ServerView.getInstance().init();
-            int x = ClientView.getInstance().getX() - (ClientView.getInstance().getWidth() / 2) - (ServerView.getInstance().getWidth() / 2);
-            if (x < ServerView.getInstance().getWidth() / 2) {
-                x = ClientView.getInstance().getX() + (ClientView.getInstance().getWidth() / 2) + (ServerView.getInstance().getWidth() / 2);
-            }
-            if(x > Toolkit.getDefaultToolkit().getScreenSize().width - ServerView.getInstance().getWidth() / 2) {
-                x = ClientView.getInstance().getX();
-            }
-
-            ServerView.getInstance().setLocation(
-                    x, ClientView.getInstance().getLocation().getLocation().y
-            );
-        }
-
-        // Try to connect the client in a moment
-        new Thread(() -> {
-            try {
-                long timeout = System.currentTimeMillis() + 2000L;
-                while(System.currentTimeMillis() < timeout && !ServerModel.get().isRunning()) {
-                    Thread.sleep(100L);
-                }
-            } catch(InterruptedException e) {
-                Log.w("Failed to wait while server starts up (" + e.getMessage() + ")", ClientToolbarView.class);
-            }
-
-            if(!ClientModel.get().isRunning())
-                ClientModel.get().start();
-        }).start();
-    }
 }
