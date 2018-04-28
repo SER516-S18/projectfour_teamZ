@@ -1,5 +1,6 @@
 package teamZ.project4.model.client;
 
+import org.jfree.data.category.DefaultCategoryDataset;
 import teamZ.project4.listeners.ClientListener;
 import teamZ.project4.model.EmostatePacket;
 import teamZ.project4.model.Emotion;
@@ -55,6 +56,7 @@ public class ClientModel {
     private ClientWorker worker;
     private LinkedList<EmostatePacket> packets;
     private HashMap<Expression, LinkedList<ValueTuple>> expressionPackets;
+    private HashMap<Expression, Integer> expressionPacketsCount;
     private HashMap<Emotion, LinkedList<ValueTuple>> emotionPackets;
     private EmostatePacket packetNewest;
 
@@ -76,8 +78,10 @@ public class ClientModel {
 
         packets = new LinkedList<>();
         expressionPackets = new HashMap<>();
+        expressionPacketsCount = new HashMap<>();
         for(Expression expression : Expression.values()) {
             expressionPackets.put(expression, new LinkedList<>());
+            expressionPacketsCount.put(expression, 0);
         }
         emotionPackets = new HashMap<>();
         for(Emotion emotion : Emotion.values()) {
@@ -280,6 +284,30 @@ public class ClientModel {
         }
 
         this.notifyValuesAdded();
+        updateExpressionCount();
+    }
+
+    private void updateExpressionCount(){
+        for (Expression expression : expressionPackets.keySet()) {
+            int size = expressionPackets.get(expression).size();
+            if(!expressionPackets.get(expression).isEmpty()) {
+                if(expressionPackets.get(expression).size()==1){
+                    expressionPacketsCount.put(expression,1);                    
+                }
+                else {
+                    float prevValue = expressionPackets.get(expression).get(size - 2).VALUE;
+                    float newValue = expressionPackets.get(expression).get(size - 1).VALUE;
+                    if(prevValue!=newValue && expressionPacketsCount.containsKey(expression)){
+                        int newCount = expressionPacketsCount.get(expression) + 1;
+                        expressionPacketsCount.put(expression,newCount);
+                    }
+                    else if (prevValue!=newValue){
+                        expressionPacketsCount.put(expression,1);
+                    }
+                    DefaultCategoryDataset d = new DefaultCategoryDataset();
+                }
+            }
+        }
     }
 
     /**
@@ -336,5 +364,9 @@ public class ClientModel {
      */
     public int getPacketsCount() {
         return packets.size();
+    }
+
+    public HashMap<Expression, Integer> getExpressionPacketsCount() {
+        return expressionPacketsCount;
     }
 }

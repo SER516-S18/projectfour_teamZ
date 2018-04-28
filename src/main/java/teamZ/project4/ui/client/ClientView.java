@@ -68,6 +68,9 @@ public class ClientView extends JFrame {
         ClientPerformanceMetricsView metricsView = new ClientPerformanceMetricsView();
         tabbedPane.addTab("Performance Metrics", metricsView);
 
+        ClientExpressionCountGraphView clientExpressionCountGraphView = new ClientExpressionCountGraphView();
+        tabbedPane.addTab("Expression Count Graph", clientExpressionCountGraphView);
+
         // Show frame
         this.setVisible(true);
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
