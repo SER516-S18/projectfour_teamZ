@@ -2,6 +2,7 @@ package teamZ.project4.ui.server;
 
 import teamZ.project4.constants.ColorConstants;
 import teamZ.project4.constants.TextConstants;
+import teamZ.project4.controllers.server.ServerToolbarController;
 import teamZ.project4.listeners.ServerListener;
 import teamZ.project4.model.server.ServerModel;
 import teamZ.project4.util.Log;
@@ -18,11 +19,15 @@ public class ServerToolbarView extends JMenuBar {
     private JMenuItem menuItemStateChange;
     private JLabel labelSessions;
     private JButton buttonStatus;
+    private ServerToolbarController controller;
 
     /**
      * Constructor for ServerToolbarView, the toolbar at the top of the Server UI
      */
     public ServerToolbarView() {
+
+        controller = new ServerToolbarController(this);
+
         ServerModel.get().addListener(new ServerListener() {
             @Override
             public void started() {
@@ -65,11 +70,11 @@ public class ServerToolbarView extends JMenuBar {
         this.add(menu);
 
         menuItem = new JMenuItem("Change port");
-        menuItem.addActionListener(e -> displayChangePortDialog());
+        menuItem.addActionListener(e -> controller.displayChangePortDialog());
         menu.add(menuItem);
 
         menuItemStateChange = new JMenuItem(ServerModel.get().isRunning() ? "Stop server" : "Start server");
-        menuItemStateChange.addActionListener(e -> changeServerState());
+        menuItemStateChange.addActionListener(e -> controller.changeServerState());
         menu.add(menuItemStateChange);
 
         this.add(Box.createHorizontalStrut(32));
@@ -95,7 +100,7 @@ public class ServerToolbarView extends JMenuBar {
         buttonStatus.setBorderPainted(false);
         buttonStatus.setFocusPainted(false);
         buttonStatus.setForeground(ColorConstants.INDICATOR_OFF);
-        buttonStatus.addActionListener(e -> changeServerState());
+        buttonStatus.addActionListener(e -> controller.changeServerState());
         this.add(buttonStatus);
 
         // Create a timer to blink if on or off
@@ -111,57 +116,5 @@ public class ServerToolbarView extends JMenuBar {
             }
         });
         timer.start();
-    }
-
-    /**
-     * Displays a prompt to change the port to host the server on
-     */
-    private void displayChangePortDialog() {
-        String input = JOptionPane.showInputDialog(this, "Enter port number", "Change port number", JOptionPane.PLAIN_MESSAGE);
-        try {
-            ServerModel.get().setPort(Integer.parseInt(input));
-
-            if(ServerModel.get().isRunning()) {
-                ServerModel.get().shutdown();
-                long timeout = System.currentTimeMillis() + 1000L;
-                while(ServerModel.get().isRunning() && System.currentTimeMillis() < timeout) {
-                    Thread.sleep(100L);
-                }
-                ServerModel.get().start();
-            }
-        } catch(NumberFormatException e) {
-            Log.e("Invalid port specified (Must be numeric)", ServerToolbarView.class);
-        } catch(IllegalArgumentException e) {
-            Log.e("Invalid port specified (" + e.getMessage() + ")", ServerToolbarView.class);
-        } catch (InterruptedException e) {
-            Log.w("Failed to sleep between restarting server from port change (" + e.getMessage() + ")", ServerToolbarView.class);
-        }
-    }
-
-    /**
-     * Starts up or shuts down the server
-     */
-    private void changeServerState() {
-        if(ServerModel.get().isRunning()) {
-            ServerModel.get().shutdown();
-            try {
-                long timeout = System.currentTimeMillis() + 1000L;
-                while (ServerModel.get().isRunning() && System.currentTimeMillis() < timeout) {
-                    Thread.sleep(100L);
-                }
-            } catch(InterruptedException e) {
-                Log.w("Failed to sleep while shutting down server (" + e.getMessage() + ")", ServerToolbarView.class);
-            }
-        } else {
-            ServerModel.get().start();
-            try {
-                long timeout = System.currentTimeMillis() + 1000L;
-                while (!ServerModel.get().isRunning() && System.currentTimeMillis() < timeout) {
-                    Thread.sleep(100L);
-                }
-            } catch(InterruptedException e) {
-                Log.w("Failed to sleep while starting server (" + e.getMessage() + ")", ServerToolbarView.class);
-            }
-        }
     }
 }

@@ -2,6 +2,7 @@ package teamZ.project4.ui.server;
 
 import teamZ.project4.constants.ColorConstants;
 import teamZ.project4.constants.TextConstants;
+import teamZ.project4.controllers.server.ServerValuesController;
 import teamZ.project4.listeners.ServerListener;
 import teamZ.project4.model.EmostatePacketBuilder;
 import teamZ.project4.model.Emotion;
@@ -16,7 +17,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
-import java.text.ParseException;
 
 /**
  * UI for setting/inputting the emostate values
@@ -51,10 +51,13 @@ public class ServerValuesView extends JPanel {
     private Expression previousExpressionFaceLower;
     private Expression previousExpressionFaceUpper;
 
+    private ServerValuesController controller;
+
     /**
      * Constructor for ServerValuesView, the input for the packet settings to send
      */
     public ServerValuesView() {
+        controller = new ServerValuesController();
         emostatePacketBuilder = EmostatePacketBuilder.getZeroedEmostatePacket();
         ServerModel.get().setPacket(emostatePacketBuilder);
         ServerModel.get().addListener(new ServerListener() {
@@ -184,13 +187,8 @@ public class ServerValuesView extends JPanel {
         comboExpressionFaceEyes.setModel(new DefaultComboBoxModel<>(expressionEyeValues));
         comboExpressionFaceEyes.setMaximumSize(new Dimension(128, 128));
         comboExpressionFaceEyes.addActionListener(event -> {
-            // Reset previous value, if applicable
-            if (previousExpressionEyes != null) {
-                emostatePacketBuilder.setExpression(previousExpressionEyes, false);
-            }
-
-            checkboxEye.setSelected(emostatePacketBuilder.getExpressionBoolean((Expression) comboExpressionFaceEyes.getSelectedItem()));
-            previousExpressionEyes = (Expression) comboExpressionFaceEyes.getSelectedItem();
+            controller.comboExpressionFaceEyesChange(previousExpressionEyes,emostatePacketBuilder,checkboxEye,
+                    comboExpressionFaceEyes);
         });
         panelInputEyes.add(comboExpressionFaceEyes, BorderLayout.WEST);
 
@@ -203,7 +201,7 @@ public class ServerValuesView extends JPanel {
         checkboxEye.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                emostatePacketBuilder.setExpression((Expression) comboExpressionFaceEyes.getSelectedItem(), checkboxEye.isSelected());
+                controller.changeExpression(emostatePacketBuilder,comboExpressionFaceEyes, checkboxEye.isSelected());
             }
         });
         panelInputEyes.add(checkboxEye);
@@ -219,7 +217,7 @@ public class ServerValuesView extends JPanel {
             @Override
             public void mousePressed(MouseEvent e) {
                 if(buttonEye.isVisible())
-                    emostatePacketBuilder.setExpression((Expression) comboExpressionFaceEyes.getSelectedItem(), true);
+                    controller.changeExpression(emostatePacketBuilder,comboExpressionFaceEyes,true);
             }
 
             @Override
@@ -248,12 +246,8 @@ public class ServerValuesView extends JPanel {
         comboExpressionFaceUpper.setModel(new DefaultComboBoxModel<>(expressionFaceUpperValues));
         comboExpressionFaceUpper.setMaximumSize(new Dimension(128, 128));
         comboExpressionFaceUpper.addActionListener(event -> {
-            // Reset previous value, if applicable
-            if (previousExpressionFaceUpper != null) {
-                emostatePacketBuilder.setExpression(previousExpressionFaceUpper, 0f);
-            }
-            spinnerUpperFace.setValue(emostatePacketBuilder.getExpressionFloating((Expression) comboExpressionFaceUpper.getSelectedItem()).doubleValue());
-            previousExpressionFaceUpper = (Expression) comboExpressionFaceUpper.getSelectedItem();
+            controller.comboExpressionFaceUpperChange(previousExpressionFaceUpper, emostatePacketBuilder,
+                    spinnerUpperFace,comboExpressionFaceUpper);
         });
         panelInputFaceUpper.add(comboExpressionFaceUpper, BorderLayout.WEST);
 
@@ -266,7 +260,7 @@ public class ServerValuesView extends JPanel {
         spinnerUpperFace.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                handleComboExpressionChange(comboExpressionFaceUpper, spinnerUpperFace);
+                controller.handleComboExpressionChange(emostatePacketBuilder,comboExpressionFaceUpper, spinnerUpperFace);
             }
         });
         panelInputFaceUpper.add(spinnerUpperFace, BorderLayout.EAST);
@@ -286,13 +280,8 @@ public class ServerValuesView extends JPanel {
         comboExpressionFaceLower.setModel(new DefaultComboBoxModel<>(expressionFaceLowerValues));
         comboExpressionFaceLower.setMaximumSize(new Dimension(128, 128));
         comboExpressionFaceLower.addActionListener(event -> {
-            // Reset previous value, if applicable
-            if (previousExpressionFaceLower != null) {
-                emostatePacketBuilder.setExpression(previousExpressionFaceLower, 0.0f);
-            }
-
-            spinnerLowerFace.setValue(emostatePacketBuilder.getExpression((Expression) comboExpressionFaceLower.getSelectedItem()).doubleValue());
-            previousExpressionFaceLower = (Expression) comboExpressionFaceLower.getSelectedItem();
+            controller.comboExpressionFaceLowerChange(previousExpressionFaceLower,emostatePacketBuilder,
+                    spinnerLowerFace, comboExpressionFaceLower);
         });
         panelInputFaceLower.add(comboExpressionFaceLower, BorderLayout.WEST);
 
@@ -305,7 +294,7 @@ public class ServerValuesView extends JPanel {
         spinnerLowerFace.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                handleComboExpressionChange(comboExpressionFaceLower, spinnerLowerFace);
+                controller.handleComboExpressionChange(emostatePacketBuilder,comboExpressionFaceLower, spinnerLowerFace);
             }
         });
         panelInputFaceLower.add(spinnerLowerFace, BorderLayout.EAST);
@@ -325,7 +314,7 @@ public class ServerValuesView extends JPanel {
         comboEmotion.setModel(new DefaultComboBoxModel<>(emotionValues));
         comboEmotion.setMaximumSize(new Dimension(128, 128));
         comboEmotion.addActionListener(event -> {
-            spinnerEmotion.setValue(emostatePacketBuilder.getEmotion((Emotion) comboEmotion.getSelectedItem()).doubleValue());
+            controller.handleSpinnerEmotionChange(emostatePacketBuilder, spinnerEmotion, comboEmotion);
         });
         panelInputEmotion.add(comboEmotion, BorderLayout.WEST);
 
@@ -338,37 +327,9 @@ public class ServerValuesView extends JPanel {
         spinnerEmotion.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                handleComboEmotionChange(comboEmotion, spinnerEmotion);
+                controller.handleComboEmotionChange(emostatePacketBuilder,comboEmotion, spinnerEmotion);
             }
         });
         panelInputEmotion.add(spinnerEmotion, BorderLayout.EAST);
-    }
-
-    /**
-     * Handles combo expression change to save to builder
-     * @param combo Expression to save
-     * @param spinner Value to save
-     */
-    private void handleComboExpressionChange(JComboBox combo, JSpinner spinner) {
-        try {
-            spinner.commitEdit();
-            emostatePacketBuilder.setExpression((Expression) combo.getSelectedItem(), (float) ((double) spinner.getValue()));
-        } catch(ParseException e) {
-            Log.w("Failed to parse " + combo.getSelectedItem() + " value", ServerValuesView.class);
-        }
-    }
-
-    /**
-     * Handles combo emotion change to save to builder
-     * @param combo Emotion to save
-     * @param spinner Value to save
-     */
-    private void handleComboEmotionChange(JComboBox combo, JSpinner spinner) {
-        try {
-            spinner.commitEdit();
-            emostatePacketBuilder.setEmotion((Emotion) combo.getSelectedItem(), (float) ((double) spinner.getValue()));
-        } catch(ParseException e) {
-            Log.w("Failed to parse " + combo.getSelectedItem() + " value", ServerValuesView.class);
-        }
     }
 }

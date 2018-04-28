@@ -2,6 +2,7 @@ package teamZ.project4.ui.server;
 
 import teamZ.project4.constants.ColorConstants;
 import teamZ.project4.constants.TextConstants;
+import teamZ.project4.controllers.server.ServerConsoleController;
 import teamZ.project4.util.Log;
 import teamZ.project4.util.LogRecord;
 import teamZ.project4.util.Terminal;
@@ -25,10 +26,13 @@ public class ServerConsoleView extends JPanel {
     private JTextField textfieldInput;
     public boolean timestamp = false;
 
+    private ServerConsoleController controller;
+
     /**
      * Constructor for the view containing the console
      */
     public ServerConsoleView() {
+        controller = new ServerConsoleController();
         // Create transparent border around class
         this.setLayout(new BorderLayout());
         this.setOpaque(false);
@@ -64,8 +68,7 @@ public class ServerConsoleView extends JPanel {
         buttonClear.setBackground(ColorConstants.BACKGROUND_BLUE);
         buttonClear.setFocusPainted(false);
         buttonClear.addActionListener(e -> {
-            textareaLog.setText("");
-            textfieldInput.setText("");
+            controller.clearConsole(textareaLog,textfieldInput);
         });
         panelConsoleInput.add(buttonClear);
 

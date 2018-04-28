@@ -2,6 +2,7 @@ package teamZ.project4.ui.server;
 
 import teamZ.project4.constants.ColorConstants;
 import teamZ.project4.constants.TextConstants;
+import teamZ.project4.controllers.server.ServerTransmitController;
 import teamZ.project4.listeners.ServerListener;
 import teamZ.project4.model.server.ServerModel;
 import teamZ.project4.util.Log;
@@ -19,11 +20,15 @@ public class ServerTransmitView extends JPanel {
     private JButton buttonSend;
     private JCheckBox checkboxRepeat;
     private JSpinner spinnerInterval;
+    private ServerTransmitController controller;
 
     /**
      * Constructor for ServerTransmitView, the input for how to send packets
      */
     public ServerTransmitView() {
+
+        controller = new ServerTransmitController(this);
+
         this.init();
 
         ServerModel.get().addListener(new ServerListener() {
@@ -44,7 +49,7 @@ public class ServerTransmitView extends JPanel {
 
             @Override
             public void packetRepeatingToggled() {
-                updateSendButtonText();
+                controller.updateSendButtonText(buttonSend);
             }
 
             @Override
@@ -63,13 +68,7 @@ public class ServerTransmitView extends JPanel {
         buttonSend = new JButton("Invalid");
         buttonSend.setFont(TextConstants.LARGE_FONT);
         buttonSend.addActionListener(e -> {
-            if(ServerModel.get().isPacketRepeatMode()) {
-                ServerModel.get().sendPacketsToggle();
-            } else {
-                ServerModel.get().sendPacketIndividual();
-            }
-
-            this.updateSendButtonText();
+            controller.sendData(buttonSend);
         });
         this.add(buttonSend);
 
@@ -79,15 +78,7 @@ public class ServerTransmitView extends JPanel {
         checkboxRepeat.setFont(TextConstants.LARGE_FONT);
         checkboxRepeat.setOpaque(false);
         checkboxRepeat.addActionListener(e -> {
-            if(!ServerModel.get().isRepeatingPackets()) {
-                // If not already repeating, just change the mode
-                ServerModel.get().setPacketRepeatMode(checkboxRepeat.isSelected());
-            } else {
-                // If already repeating, turn off, then change the mode
-                ServerModel.get().sendPacketsToggle();
-                ServerModel.get().setPacketRepeatMode(false);
-            }
-            updateSendButtonText();
+            controller.repeatCheckToggle(checkboxRepeat,buttonSend);
         });
         this.add(checkboxRepeat);
 
@@ -116,27 +107,6 @@ public class ServerTransmitView extends JPanel {
         promptIntervalSeconds.setFont(TextConstants.LARGE_FONT);
         this.add(promptIntervalSeconds);
 
-        updateSendButtonText();
-    }
-
-    /**
-     * Updates the send text depending on the repeat packet mode
-     */
-    private void updateSendButtonText() {
-        if(buttonSend == null)
-            return;
-
-        if(ServerModel.get().isPacketRepeatMode()) {
-            if(ServerModel.get().isRepeatingPackets()) {
-                buttonSend.setText("Stop");
-            } else {
-                buttonSend.setText("Start");
-            }
-        } else {
-            buttonSend.setText("Send");
-        }
-
-        this.validate();
-        this.repaint();
+        controller.updateSendButtonText(buttonSend);
     }
 }

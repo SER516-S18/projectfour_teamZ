@@ -2,16 +2,13 @@ package teamZ.project4.ui.client;
 
 import teamZ.project4.constants.ColorConstants;
 import teamZ.project4.constants.TextConstants;
+import teamZ.project4.controllers.client.ClientToolbarController;
 import teamZ.project4.listeners.ClientListener;
 import teamZ.project4.model.client.ClientModel;
-import teamZ.project4.model.server.ServerModel;
-import teamZ.project4.ui.server.ServerView;
-import teamZ.project4.util.Log;
 
 import javax.swing.*;
 import java.awt.*;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.awt.event.KeyEvent;
 
 /**
  * UI toolbar for the ClientView
@@ -22,11 +19,24 @@ public class ClientToolbarView extends JMenuBar {
     private JMenuItem menuItemStateChange;
     private JButton buttonStatus;
     private JLabel textTime;
+    private ClientToolbarController controller;
 
     /**
      * Constructor for ClientToolbarView, the toolbar at the top of the ClientView
      */
     public ClientToolbarView() {
+
+        controller = new ClientToolbarController(this);
+
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
+            // If CONTROL + SHIFT + Q, open server
+            if (e.isShiftDown() && e.getKeyCode() == 81 && e.getID() == KeyEvent.KEY_RELEASED) {
+                controller.openServerPanel();
+                return true;
+            }
+            return false;
+        });
+
         ClientModel.get().addListener(new ClientListener() {
             @Override
             public void valuesChanged() {
@@ -59,18 +69,18 @@ public class ClientToolbarView extends JMenuBar {
         this.add(menu);
 
         menuItemStateChange = new JMenuItem(ClientModel.get().isConnected() ? "Disconnect from server" : "Connect to server");
-        menuItemStateChange.addActionListener(e -> handleConnectToServer());
+        menuItemStateChange.addActionListener(e -> controller.handleConnectToServer());
         menu.add(menuItemStateChange);
 
         menuItem = new JMenuItem("Change server host/port");
-        menuItem.addActionListener(e -> displayChangeHostDialog());
+        menuItem.addActionListener(e -> controller.displayChangeHostDialog());
         menu.add(menuItem);
 
         menu.addSeparator();
 
         menuItem = new JMenuItem("Open composer (server)");
         menuItem.addActionListener(e -> {
-            openServerPanel();
+            controller.openServerPanel();
         });
         menu.add(menuItem);
 
@@ -87,7 +97,7 @@ public class ClientToolbarView extends JMenuBar {
         buttonStatus.setBorderPainted(false);
         buttonStatus.setFocusPainted(false);
         buttonStatus.setForeground(ColorConstants.INDICATOR_OFF);
-        buttonStatus.addActionListener(e -> handleConnectToServer());
+        buttonStatus.addActionListener(e -> controller.handleConnectToServer());
         this.add(buttonStatus);
 
         // Create a timer to blink if on or off
@@ -111,105 +121,5 @@ public class ClientToolbarView extends JMenuBar {
         textTime.setForeground(Color.BLACK);
         textTime.setFont(TextConstants.LARGE_FONT);
         this.add(textTime);
-    }
-
-    /**
-     * Prompts the user to input a new host/port input
-     */
-    private void displayChangeHostDialog() {
-        JTextField textfieldHost = new JTextField();
-        JTextField textfieldPort = new JTextField();
-        Object[] message = {
-                "Host: ", textfieldHost,
-                "Port: ", textfieldPort
-        };
-        int option = JOptionPane.showConfirmDialog(this, message, "Change host", JOptionPane.OK_CANCEL_OPTION);
-        if (option != JOptionPane.OK_OPTION) {
-            return;
-        }
-
-        try {
-            String host = textfieldHost.getText();
-            int port = Integer.parseInt(textfieldPort.getText());
-
-            if (host.equalsIgnoreCase("localhost")) {
-                ClientModel.get().setHostToLocalhost();
-                ClientModel.get().setPort(port);
-            } else {
-                ClientModel.get().setHost(InetAddress.getByName(host));
-                ClientModel.get().setPort(port);
-            }
-        } catch(NumberFormatException e) {
-            Log.e("Invalid port specified (Must be numeric)", ClientToolbarView.class);
-        } catch(UnknownHostException e) {
-            Log.e("Invalid host specified (" + e.getMessage() + ")", ClientToolbarView.class);
-        } catch(IllegalArgumentException e) {
-            Log.e("Invalid port specified (" + e.getMessage() + ")", ClientToolbarView.class);
-        }
-    }
-
-    /**
-     * Connects to the server or disconnects if connected
-     */
-    private void handleConnectToServer() {
-        if(ClientModel.get().isRunning()) {
-            ClientModel.get().disconnect();
-            try {
-                long timeout = System.currentTimeMillis() + 1000L;
-                while (ClientModel.get().isRunning() && System.currentTimeMillis() < timeout) {
-                    Thread.sleep(100L);
-                }
-            } catch(InterruptedException e) {
-                Log.w("Failed to sleep while disconnecting (" + e.getMessage() + ")", ClientToolbarView.class);
-            }
-        } else {
-            ClientModel.get().start();
-            try {
-                long timeout = System.currentTimeMillis() + 1000L;
-                while (!ClientModel.get().isRunning() && System.currentTimeMillis() < timeout) {
-                    Thread.sleep(100L);
-                }
-            } catch(InterruptedException e) {
-                Log.w("Failed to sleep while connecting (" + e.getMessage() + ")", ClientToolbarView.class);
-            }
-        }
-    }
-
-    /**
-     * Opens the server composer UI, if not open, otherwise refocuses it. Attempts connection if starting up server.
-     */
-    public void openServerPanel() {
-        if(ServerView.getInstance().isDisplayable()) {
-            ServerView.getInstance().toFront();
-            ServerView.getInstance().repaint();
-        } else {
-            ServerView.getInstance().init();
-            int x = ClientView.getInstance().getX() - (ClientView.getInstance().getWidth() / 2) - (ServerView.getInstance().getWidth() / 2);
-            if (x < ServerView.getInstance().getWidth() / 2) {
-                x = ClientView.getInstance().getX() + (ClientView.getInstance().getWidth() / 2) + (ServerView.getInstance().getWidth() / 2);
-            }
-            if(x > Toolkit.getDefaultToolkit().getScreenSize().width - ServerView.getInstance().getWidth() / 2) {
-                x = ClientView.getInstance().getX();
-            }
-
-            ServerView.getInstance().setLocation(
-                    x, ClientView.getInstance().getLocation().getLocation().y
-            );
-        }
-
-        // Try to connect the client in a moment
-        new Thread(() -> {
-            try {
-                long timeout = System.currentTimeMillis() + 2000L;
-                while(System.currentTimeMillis() < timeout && !ServerModel.get().isRunning()) {
-                    Thread.sleep(100L);
-                }
-            } catch(InterruptedException e) {
-                Log.w("Failed to wait while server starts up (" + e.getMessage() + ")", ClientToolbarView.class);
-            }
-
-            if(!ClientModel.get().isRunning())
-                ClientModel.get().start();
-        }).start();
     }
 }

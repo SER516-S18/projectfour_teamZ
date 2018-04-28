@@ -9,6 +9,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import teamZ.project4.constants.ColorConstants;
 import teamZ.project4.constants.TextConstants;
+import teamZ.project4.controllers.client.ClientPerformanceMetricsController;
 import teamZ.project4.listeners.ClientListener;
 import teamZ.project4.model.Emotion;
 import teamZ.project4.model.ValueTuple;
@@ -36,10 +37,13 @@ public class ClientPerformanceMetricsView extends JPanel {
     private ChartPanel panelChart;
     private float range = 30;
 
+    private ClientPerformanceMetricsController controller;
+
     /**
      * Constructor for the ClientPerformanceMetricsView, showing emotion metrics
      */
     public ClientPerformanceMetricsView() {
+        controller = new ClientPerformanceMetricsController(this);
         availableColors.put("Red", Color.RED);
         availableColors.put("Orange", Color.ORANGE);
         availableColors.put("Yellow", Color.YELLOW);
@@ -105,7 +109,7 @@ public class ClientPerformanceMetricsView extends JPanel {
             buttonColor.setFocusPainted(false);
             buttonColor.setForeground(emotionColors.get(emotion));
             buttonColor.addActionListener(e -> {
-                handleChangeColorClick(buttonColor, emotion);
+                controller.handleChangeColorClick(buttonColor, emotion,availableColors,emotionColors,chart,panelChart);
             });
 
             JButton buttonName = new JButton(emotion.NAME);
@@ -115,7 +119,7 @@ public class ClientPerformanceMetricsView extends JPanel {
             buttonName.setBorderPainted(false);
             buttonName.setFocusPainted(false);
             buttonName.addActionListener( e -> {
-                handleChangeColorClick(buttonColor, emotion);
+                controller.handleChangeColorClick(buttonColor, emotion,availableColors,emotionColors,chart,panelChart);
             });
             panelEmotion.add(buttonName);
 
@@ -124,7 +128,7 @@ public class ClientPerformanceMetricsView extends JPanel {
             panelEmotion.add(buttonColor);
         }
 
-        updateGraphColors();
+        controller.updateGraphColors(chart,panelChart,emotionColors);
 
         JPanel panelTime = new JPanel();
         panelTime.setMaximumSize(new Dimension(64, 32));
@@ -216,23 +220,6 @@ public class ClientPerformanceMetricsView extends JPanel {
     }
 
     /**
-     * Updates the graph line colors to correspond with the set emotion color
-     */
-    private void updateGraphColors() {
-        for(int i = 0; i < Emotion.values().length; i++) {
-            Emotion emotion = Emotion.values()[i];
-            Color color = emotionColors.get(emotion);
-            if(color == null)
-                chart.getXYPlot().getRenderer().setSeriesVisible(i, false);
-            else {
-                chart.getXYPlot().getRenderer().setSeriesPaint(i, color);
-                chart.getXYPlot().getRenderer().setSeriesVisible(i, true);
-            }
-        }
-        panelChart.repaint();
-    }
-
-    /**
      * Called when new values need to be added to the graph
      */
     public void updateGraphValues() {
@@ -256,49 +243,5 @@ public class ClientPerformanceMetricsView extends JPanel {
         }
 
         ((XYPlot) chart.getPlot()).getDomainAxis().setRange(Math.max(0, tick - range), Math.max(tick, range));
-    }
-
-    /**
-     * Handles a click for changing the color
-     * @param button JButton to set color
-     * @param emotion Emotion to set color of
-     */
-    private void handleChangeColorClick(JButton button, Emotion emotion) {
-        ArrayList<String> colors = new ArrayList<>();
-        Set<Map.Entry<String, Color>> set = availableColors.entrySet();
-
-        colors.add("Invisible");
-        String current = "Invisible";
-        Iterator<Map.Entry<String,Color>> it = set.iterator();
-        while (it.hasNext()) {
-            Map.Entry<String, Color> entry = it.next();
-            if(entry.getValue().equals(emotionColors.get(emotion)))
-                current = entry.getKey();
-
-            colors.add(entry.getKey());
-        }
-
-        String input = (String) JOptionPane.showInputDialog(
-                this,
-                "Choose color",
-                emotion.NAME + " color", JOptionPane.QUESTION_MESSAGE,
-                null,
-                colors.toArray(new String[colors.size()]),
-                current
-        );
-
-        if(input == null || input.length() == 0)
-            return;
-
-        if(input.equals("Invisible")) {
-            emotionColors.put(emotion, null);
-            button.setVisible(false);
-        } else {
-            emotionColors.put(emotion, availableColors.get(input));
-            button.setForeground(emotionColors.get(emotion));
-            button.setVisible(true);
-        }
-
-        updateGraphColors();
     }
 }
