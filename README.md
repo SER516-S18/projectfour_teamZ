@@ -8,3 +8,4 @@
 -Supriya Iyer([@siyer12](https://github.com/siyer12) | siyer12 | siyer12@asu.edu])
 -Chirag Bumb([@Chiragb7](https://github.com/Chiragb7) | cbumb | cbumb@asu.edu])
 
+Clean code
